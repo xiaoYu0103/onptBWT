@@ -42,4 +42,38 @@ Executables (without option shows help).
 ./OnlineRindex_Demo
 ./OnlineLz77ViaRlbwt
 ./DecompressLz77
+./onptBWT
 ```
+
+### onptBWT
+
+
+
+```sh
+./onptBWT [options]  #   The input file must be in standard FASTA format.
+```
+
+| Option     | Short | Required | Default | Description                                                             |
+| ---------- | ----- | -------- | ------- | ----------------------------------------------------------------------- |
+| `--input`  | `-i`  | Yes      | -       | Input FASTA file path.                                                  |
+| `--output` | `-o`  | No       | -       | Output BWT file path. If not specified, the BWT is not saved to a file. |
+| `--check`  |       | No       | 0       | Check correctness (1=enabled, 0=disabled).                              |
+| `--help`   |       | No       | -       | Show help message.                                                      |
+
+### Examples
+
+1. **Basic usage** (compute BWT and save to file):
+   ```sh
+   ./onptBWT -i genome.fasta -o output.bwt
+   ```
+2. **Enable correctness check**:
+   ```sh
+   ./onptBWT -i genome.fasta -o output.bwt --check=1
+   ```
+3. **Compute without saving to file**:
+   ```sh
+   ./onptBWT -i genome.fasta
+   ```
+
+
+

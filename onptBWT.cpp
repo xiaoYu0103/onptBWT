@@ -36,11 +36,13 @@ int main(int argc, char *argv[])
     cmdline::parser parser;
     parser.add<std::string>("input", 'i', "input file name", true);
     parser.add<std::string>("output", 'o', "output file name BWT", false);
+    parser.add<bool>("check", 0, "check correctness", false, 0);
+    parser.add("help", 0, "print help");
 
     parser.parse_check(argc, argv);
     const std::string in = parser.get<std::string>("input");
     const std::string out = parser.get<std::string>("output");
-
+    const bool checkBool = parser.get<bool>("check");
     auto t1 = std::chrono::high_resolution_clock::now();
 
     using BTreeNodeT = BTreeNode<32>;
@@ -56,7 +58,7 @@ int main(int argc, char *argv[])
 
     load_fasta_reverse(in, Text, n, ns);
     auto start = std::chrono::steady_clock::now();
-    uint64_t cur_ns, cur_n = 0;
+    uint64_t cur_ns = 0, cur_n = 0;
     // std::cout << cur_ns;
     for (unsigned char c : Text)
     {
@@ -90,28 +92,37 @@ int main(int argc, char *argv[])
 
     std::ostringstream oss;
     rlbwt.writeBWT(oss);
-    std::string osptBWT = oss.str();
-
-    // 将字符串写入文件
-    std::ofstream out_file(out); // 文件路径
-    if (out_file.is_open())
+    std::string onptBWT = oss.str();
+    if (!(out.empty()))
     {
-        out_file << osptBWT; // 写入内容
-        out_file.close();    // 关闭文件
-        std::cout << "BWT数据已写入文件: " << out << std::endl;
-    }
-    else
-    {
-        std::cerr << "无法打开文件！" << std::endl;
+        std::ofstream out_file(out); // 文件路径
+        if (out_file.is_open())
+        {
+            out_file << onptBWT; // 写入内容
+            out_file.close();    // 关闭文件
+            std::cout << "The BWT data has been written to a file: " << out << std::endl;
+        }
+        else
+        {
+            std::cerr << "Can not open file！" << std::endl;
+        }
     }
 
-    // std::string deCodeStr = rlbwt.decompressOsptBWT();
-    // std::cout << "Decode String: " << deCodeStr << std::endl;
-    // std::vector<std::string> deCodeStrs1 = split(deCodeStr, '$');
+    if (checkBool)
+    { // check correctness
+        std::string deCodeStr = rlbwt.decompressOnptBWT();
+        std::vector<std::string> deCodeStrs1 = split(deCodeStr, '$');
 
-    load_fasta(in, Text, n);
-    // std::string inputStr(Text.begin(), Text.end());
-    // std::vector<std::string> deCodeStrs2 = split(inputStr, '\x00');
-    // std::cout << check(deCodeStrs1, deCodeStrs2) << std::endl;
-    // rlbwt.writeBWT(std::cout);
+        load_fasta(in, Text, n);
+        std::string inputStr(Text.begin(), Text.end());
+        std::vector<std::string> deCodeStrs2 = split(inputStr, '\x00');
+        if (check(deCodeStrs1, deCodeStrs2))
+        {
+            std::cout << "RLBWT decompressed correctly. " << std::endl;
+        }
+        else
+        {
+            std::cout << "RLBWT inversion failed." << std::endl;
+        }
+    }
 }

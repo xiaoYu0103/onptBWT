@@ -317,7 +317,7 @@ namespace itmmti
             return true;
         }
 
-        std::string decompressOsptBWT()
+        std::string decompressOnptBWT()
         {
             std::string originStr;
             uint64_t pos = 0;

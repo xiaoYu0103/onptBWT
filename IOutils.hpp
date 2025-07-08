@@ -102,7 +102,7 @@ bool load_fasta(std::string filename, std::vector<char> &Text, uint64_t &sum)
                 // increase current text size
                 sum += seqlen;
                 // add separator
-                Text[sum++] = '\n';
+                Text[sum++] = '\x00';
             }
             // the current DNA sequence
             DNA_sequence.clear();
@@ -115,7 +115,7 @@ bool load_fasta(std::string filename, std::vector<char> &Text, uint64_t &sum)
     // std::reverse(DNA_sequence.begin(), DNA_sequence.end());
     memcpy(&Text[sum], &DNA_sequence[0], DNA_sequence.size());
     sum += DNA_sequence.size();
-    Text[sum++] = '\n';
+    Text[sum++] = '\x00';
     Text.resize(sum);
     Text.shrink_to_fit();
     // close stream
@@ -168,8 +168,11 @@ std::vector<std::string> split(std::string s, char delimiter)
     {
         if (c == delimiter)
         {
-            tokens.push_back(token);
-            token.clear();
+            if (!token.empty())
+            {
+                tokens.push_back(token);
+                token.clear();
+            }
         }
         else
         {
@@ -177,14 +180,119 @@ std::vector<std::string> split(std::string s, char delimiter)
         }
     }
 
+    if (!token.empty())
+    {
+        tokens.push_back(token);
+    }
+
     std::sort(tokens.begin(), tokens.end());
 
     return tokens;
 }
 
+void printComparison(const std::vector<std::string> &v1, const std::vector<std::string> &v2)
+{
+    std::cout << "==== Vector Comparison ====\n";
+
+    // 打印向量大小
+    std::cout << "v1 size: " << v1.size() << "\n";
+    std::cout << "v2 size: " << v2.size() << "\n";
+
+    // 打印表格标题
+    std::cout << std::left;
+    std::cout << std::setw(10) << "Index"
+              << std::setw(20) << "v1"
+              << std::setw(20) << "v2"
+              << "Status\n";
+    std::cout << std::string(60, '-') << "\n";
+
+    // 比较每个元素
+    size_t maxSize = std::max(v1.size(), v2.size());
+    bool allEqual = true;
+
+    for (size_t i = 0; i < maxSize; ++i)
+    {
+        bool hasV1 = i < v1.size();
+        bool hasV2 = i < v2.size();
+
+        std::cout << std::setw(10) << i;
+
+        // 打印 v1 元素
+        if (hasV1)
+        {
+            std::cout << std::setw(20) << ("\"" + v1[i] + "\"");
+        }
+        else
+        {
+            std::cout << std::setw(20) << "<missing>";
+        }
+
+        // 打印 v2 元素
+        if (hasV2)
+        {
+            std::cout << std::setw(20) << ("\"" + v2[i] + "\"");
+        }
+        else
+        {
+            std::cout << std::setw(20) << "<missing>";
+        }
+
+        // 比较状态
+        if (!hasV1 || !hasV2)
+        {
+            std::cout << "SIZE MISMATCH";
+            allEqual = false;
+        }
+        else if (v1[i] != v2[i])
+        {
+            std::cout << "DIFFERENT";
+            allEqual = false;
+
+            // 打印详细差异
+            std::cout << "\n  Details: ";
+            if (v1[i].size() != v2[i].size())
+            {
+                std::cout << "Lengths differ (" << v1[i].size()
+                          << " vs " << v2[i].size() << ")";
+            }
+            else
+            {
+                for (size_t j = 0; j < v1[i].size(); ++j)
+                {
+                    if (v1[i][j] != v2[i][j])
+                    {
+                        std::cout << "Char at pos " << j << ": '"
+                                  << v1[i][j] << "' (0x" << std::hex << static_cast<int>(v1[i][j])
+                                  << ") vs '" << v2[i][j] << "' (0x"
+                                  << static_cast<int>(v2[i][j]) << std::dec << ")";
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            std::cout << "equal";
+        }
+
+        std::cout << "\n";
+    }
+
+    std::cout << "\nOverall: " << (allEqual ? "VECTORS ARE EQUAL" : "VECTORS DIFFER")
+              << "\n=================================\n\n";
+}
+
+// 修改后的 check 函数
 bool check(const std::vector<std::string> &v1, const std::vector<std::string> &v2)
 {
-    return (v1.size() == v2.size()) && std::equal(v1.begin(), v1.end(), v2.begin());
+    bool result = (v1.size() == v2.size()) && std::equal(v1.begin(), v1.end(), v2.begin());
+
+    if (!result)
+    {
+        printComparison(v1, v2);
+    }
+
+    return result;
 }
 
 #endif

@@ -24,6 +24,9 @@ endif()
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(~/include) #SDSL headers are here
+
+LINK_DIRECTORIES(~/lib) #SDSL lib are here
 
 
 
@@ -58,6 +61,9 @@ add_executable(OnlineRindex_Demo OnlineRindex_Demo.cpp)
 target_link_libraries(OnlineRindex_Demo Basics)
 target_link_libraries(OnlineRindex_Demo BTree)
 
+add_executable(onptBWT onptBWT.cpp)
+target_link_libraries(onptBWT Basics)
+target_link_libraries(onptBWT BTree)
 
 
 #### TEST
